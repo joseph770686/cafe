@@ -413,8 +413,7 @@ def main_app():
     
     # Tabs
     tab1, tab2, tab3, tab4 = st.tabs(["📊 Datos", "🤖 Modelo", "📈 Visualizaciones", "🔮 Predicciones"])
-    
-with tab1:
+  with tab1:
     st.subheader("📊 Información del Dataset")
     
     st.info("📂 El dataset se está utilizando internamente para entrenar el modelo.")
@@ -438,18 +437,13 @@ with tab1:
         aspect="auto"
     )
     st.plotly_chart(fig_corr, use_container_width=True)
-               col_save1, col_save2 = st.columns(2)
+               col1, col2 = st.columns(2)
 
-with col_save1:
-    if st.button("💾 Guardar cambios", use_container_width=True):
-        st.session_state.df_editado = edited_df
-        st.success("✅ Cambios guardados")
-        st.rerun()
+with col1:
+    st.metric("📌 Número de registros", len(df_actual))
 
-with col_save2:
-    if st.button("🔄 Restaurar original", use_container_width=True):
-        st.session_state.df_editado = None
-        st.rerun()
+with col2:
+    st.metric("📌 Número de variables", len(df_actual.columns))
                 
                 csv = df_actual.to_csv(index=False)
                 st.download_button(label="📥 Descargar CSV", data=csv, file_name="datos_cafe.csv", mime="text/csv")
