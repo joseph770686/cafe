@@ -237,7 +237,7 @@ def main_app():
     """Aplicación principal después del login"""
     
     with st.sidebar:
-        st.image("https://em-content.zobj.net/thumbs/120/apple/354/hot-beverage_2615.png", width=100)
+        st.image("https://em-content.zobj.net/thumbs/120/apple/354/hot-beverage_2615.png", width=100) #imagen de menu 
         
         st.markdown(f"""
         <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
