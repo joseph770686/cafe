@@ -414,7 +414,7 @@ def main_app():
     # Tabs
     tab1, tab2, tab3, tab4 = st.tabs(["📊 Datos", "🤖 Modelo", "📈 Visualizaciones", "🔮 Predicciones"])
     
-    with tab1:
+with tab1:
     st.subheader("📊 Información del Dataset")
     
     st.info("📂 El dataset se está utilizando internamente para entrenar el modelo.")
@@ -438,7 +438,6 @@ def main_app():
         aspect="auto"
     )
     st.plotly_chart(fig_corr, use_container_width=True)
-                
                 col_save1, col_save2 = st.columns(2)
                 with col_save1:
                     if st.button("💾 Guardar cambios", use_container_width=True):
