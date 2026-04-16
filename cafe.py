@@ -403,7 +403,7 @@ def main_app():
     r2_test = r2_score(y_test, y_pred_test)
     
     # Tabs
-        def app():
+     def app():
     st.title("☕ Sistema de Café")
 
     tab1, tab2, tab3, tab4 = st.tabs([
