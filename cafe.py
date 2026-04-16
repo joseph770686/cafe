@@ -439,15 +439,17 @@ with tab1:
     )
     st.plotly_chart(fig_corr, use_container_width=True)
                col_save1, col_save2 = st.columns(2)
-                with col_save1:
-                    if st.button("💾 Guardar cambios", use_container_width=True):
-                        st.session_state.df_editado = edited_df
-                        st.success("✅ Cambios guardados")
-                        st.rerun()
-                with col_save2:
-                    if st.button("🔄 Restaurar original", use_container_width=True):
-                        st.session_state.df_editado = None
-                        st.rerun()
+
+with col_save1:
+    if st.button("💾 Guardar cambios", use_container_width=True):
+        st.session_state.df_editado = edited_df
+        st.success("✅ Cambios guardados")
+        st.rerun()
+
+with col_save2:
+    if st.button("🔄 Restaurar original", use_container_width=True):
+        st.session_state.df_editado = None
+        st.rerun()
                 
                 csv = df_actual.to_csv(index=False)
                 st.download_button(label="📥 Descargar CSV", data=csv, file_name="datos_cafe.csv", mime="text/csv")
