@@ -403,7 +403,27 @@ def main_app():
     r2_test = r2_score(y_test, y_pred_test)
     
     # Tabs
-        tab1, tab2, tab3, tab4 = st.tabs(["📊 Datos", "🤖 Modelo", "📈 Visualizaciones", "🔮 Predicciones"])
+        def app():
+    st.title("☕ Sistema de Café")
+
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "📊 Datos", 
+        "🤖 Modelo", 
+        "📈 Visualizaciones", 
+        "🔮 Predicciones"
+    ])
+
+    with tab1:
+        st.write("Datos")
+
+    with tab2:
+        st.write("Modelo")
+
+    with tab3:
+        st.write("Visualizaciones")
+
+    with tab4:
+        st.write("Predicciones")
 
     with tab1:
         st.subheader("📋 Dataset de Entrenamiento")
