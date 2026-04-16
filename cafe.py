@@ -438,7 +438,7 @@ with tab1:
         aspect="auto"
     )
     st.plotly_chart(fig_corr, use_container_width=True)
-                col_save1, col_save2 = st.columns(2)
+               col_save1, col_save2 = st.columns(2)
                 with col_save1:
                     if st.button("💾 Guardar cambios", use_container_width=True):
                         st.session_state.df_editado = edited_df
