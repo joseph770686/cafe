@@ -34,10 +34,8 @@ def init_session_state():
         st.session_state.show_history = False
     if 'show_recommendations' not in st.session_state:
         st.session_state.show_recommendations = False
-    # NUEVO: Estado para controlar si mostrar login o registro
     if 'show_register' not in st.session_state:
         st.session_state.show_register = False
-    # NUEVO: Inicializar modo de visualización
     if 'modo' not in st.session_state:
         st.session_state.modo = "visualizacion"
     if 'df_editado' not in st.session_state:
@@ -62,14 +60,12 @@ def init_firebase_admin():
     """Inicializa Firebase Admin SDK"""
     try:
         if not firebase_admin._apps:
-            # Intentar cargar desde secrets
             try:
                 cred_dict = dict(st.secrets["firebase_auth_token"])
                 cred = credentials.Certificate(cred_dict)
                 firebase_admin.initialize_app(cred)
                 return True
             except:
-                # Modo demo si no hay secrets
                 st.warning("Modo demostración - Firebase no configurado")
                 return False
         return True
@@ -153,7 +149,6 @@ def show_login_ui():
     </div>
     """, unsafe_allow_html=True)
     
-    # Mostrar formulario de LOGIN o REGISTRO según el estado
     if not st.session_state.show_register:
         # ========== FORMULARIO DE LOGIN ==========
         col1, col2, col3 = st.columns([1, 2, 1])
@@ -184,7 +179,6 @@ def show_login_ui():
             
             with col_btn2:
                 if st.button("📝 ¿No tienes cuenta? Regístrate", use_container_width=True):
-                    # Cambiar a modo registro
                     st.session_state.show_register = True
                     st.rerun()
             
@@ -233,7 +227,6 @@ def show_login_ui():
             
             with col_btn_reg2:
                 if st.button("🔙 Volver al inicio de sesión", use_container_width=True):
-                    # Volver al login sin registrarse
                     st.session_state.show_register = False
                     st.rerun()
             
@@ -243,7 +236,6 @@ def show_login_ui():
 def main_app():
     """Aplicación principal después del login"""
     
-    # Sidebar con información del usuario y controles
     with st.sidebar:
         st.image("https://em-content.zobj.net/thumbs/120/apple/354/hot-beverage_2615.png", width=100)
         
@@ -271,7 +263,7 @@ def main_app():
         test_size = st.slider("Tamaño del conjunto de prueba:", 0.1, 0.5, 0.3, 0.05, help="Proporción de datos para prueba")
         random_state = st.number_input("Semilla aleatoria:", 0, 100, 42, help="Para reproducibilidad de resultados")
         
-        # NUEVO: Selector de modo de visualización
+        # Selector de modo de visualización
         st.markdown("---")
         st.subheader("🎨 Modo de Visualización")
         
@@ -281,35 +273,28 @@ def main_app():
             help="Visualización: solo ver datos | Edición: modificar valores y personalizar gráficas"
         )
         
-        # Guardar el modo en session_state
         st.session_state.modo = "edicion" if "Edición" in modo_visualizacion else "visualizacion"
         
-        # Opciones de personalización solo en modo edición
         if st.session_state.modo == "edicion":
             st.markdown("---")
             st.subheader("🎨 Personalización de Gráficas")
             
             st.session_state.tipo_grafica = st.selectbox(
                 "Tipo de gráfica 3D:",
-                ["scatter_3d", "surface", "line_3d"],
-                index=["scatter_3d", "surface", "line_3d"].index(st.session_state.tipo_grafica) if st.session_state.tipo_grafica in ["scatter_3d", "surface", "line_3d"] else 0
+                ["scatter_3d", "surface", "line_3d"]
             )
             
             st.session_state.color_scheme = st.selectbox(
                 "Esquema de color:",
-                ["Viridis", "Plasma", "Inferno", "Magma", "Cividis"],
-                index=["Viridis", "Plasma", "Inferno", "Magma", "Cividis"].index(st.session_state.color_scheme) if st.session_state.color_scheme in ["Viridis", "Plasma", "Inferno", "Magma", "Cividis"] else 0
+                ["Viridis", "Plasma", "Inferno", "Magma", "Cividis"]
             )
             
             st.session_state.tamaño_puntos = st.slider("Tamaño de puntos:", 3, 15, st.session_state.tamaño_puntos)
-            
             st.session_state.tipo_residuos = st.radio(
                 "Tipo de gráfico de residuos:",
                 ["Puntos", "Barras", "Línea"],
-                horizontal=True,
-                index=["Puntos", "Barras", "Línea"].index(st.session_state.tipo_residuos) if st.session_state.tipo_residuos in ["Puntos", "Barras", "Línea"] else 0
+                horizontal=True
             )
-            
             st.session_state.mostrar_linea = st.checkbox("Mostrar línea de tendencia", value=st.session_state.mostrar_linea)
         
         st.markdown("---")
@@ -317,7 +302,6 @@ def main_app():
         
         if st.button("📜 Ver historial de predicciones", use_container_width=True):
             st.session_state.show_history = True
-        
         if st.button("💡 Ver recomendaciones", use_container_width=True):
             st.session_state.show_recommendations = True
         
@@ -328,7 +312,7 @@ def main_app():
         </div>
         """, unsafe_allow_html=True)
     
-    # Título principal con animación
+    # Título principal
     st.markdown("""
     <style>
     @keyframes slideIn {
@@ -349,39 +333,65 @@ def main_app():
     </div>
     """, unsafe_allow_html=True)
     
-    # Mensaje de bienvenida
     st.success(f"✨ ¡Bienvenido/a {st.session_state.get('user_name', 'Usuario')}! ☕")
     
-    # Cargar datos
+    # ========== CARGA DE DATOS ADAPTADA PARA TU CSV ==========
     if opcion_datos == "📂 Cargar CSV":
         archivo = st.file_uploader("Seleccionar archivo CSV", type=['csv'])
         if archivo:
             df = pd.read_csv(archivo)
             st.success(f"✅ {len(df)} registros cargados exitosamente")
+            
+            # Mostrar las columnas detectadas
+            st.info(f"📋 Columnas detectadas: {', '.join(df.columns.tolist())}")
         else:
             st.warning("⚠️ Usando datos de ejemplo por defecto")
             df = None
     else:
+        # Datos de ejemplo adaptados al formato de tu CSV
         data = {
-            'altitud_msnm': [800, 950, 1100, 1250, 1400, 1550, 1700, 1850, 2000, 2150],
-            'temp_promedio_c': [28.5, 27.2, 25.8, 24.3, 22.7, 21.2, 19.8, 18.3, 16.9, 15.4],
-            'puntaje_calidad_1_10': [3.2, 4.8, 6.1, 7.2, 8.1, 8.7, 9.1, 9.4, 9.7, 9.9]
+            'temperatura': [20.6, 29.3, 25.9, 24.0, 17.3, 17.3, 15.9, 28.0, 24.0, 25.6],
+            'altitud': [1060.5, 999.4, 764.2, 1410.9, 1214.9, 1798.6, 548.2, 1465.8, 1644.4, 1639.2],
+            'puntaje': [10.0, 9.61, 10.0, 10.0, 10.0, 10.0, 8.50, 10.0, 10.0, 10.0]
         }
         df = pd.DataFrame(data)
         st.info(f"📊 Usando {len(df)} registros de ejemplo")
     
     if df is None:
         data = {
-            'altitud_msnm': [800, 950, 1100, 1250, 1400, 1550, 1700, 1850, 2000, 2150],
-            'temp_promedio_c': [28.5, 27.2, 25.8, 24.3, 22.7, 21.2, 19.8, 18.3, 16.9, 15.4],
-            'puntaje_calidad_1_10': [3.2, 4.8, 6.1, 7.2, 8.1, 8.7, 9.1, 9.4, 9.7, 9.9]
+            'temperatura': [20.6, 29.3, 25.9, 24.0, 17.3, 17.3, 15.9, 28.0, 24.0, 25.6],
+            'altitud': [1060.5, 999.4, 764.2, 1410.9, 1214.9, 1798.6, 548.2, 1465.8, 1644.4, 1639.2],
+            'puntaje': [10.0, 9.61, 10.0, 10.0, 10.0, 10.0, 8.50, 10.0, 10.0, 10.0]
         }
         df = pd.DataFrame(data)
     
-    # Usar datos editados si existen y estamos en modo edición
+    # ========== ADAPTACIÓN DE COLUMNAS PARA TU CSV ==========
+    # Renombrar columnas para que coincidan con el código existente
+    if 'temperatura' in df.columns and 'altitud' in df.columns and 'puntaje' in df.columns:
+        df = df.rename(columns={
+            'temperatura': 'temp_promedio_c',
+            'altitud': 'altitud_msnm',
+            'puntaje': 'puntaje_calidad_1_10'
+        })
+        st.success("✅ Columnas adaptadas correctamente")
+    elif 'temp_promedio_c' not in df.columns:
+        # Si las columnas tienen otros nombres, intentar detectar
+        posibles_temp = [col for col in df.columns if 'temp' in col.lower() or 'temperatura' in col.lower()]
+        posibles_alt = [col for col in df.columns if 'alt' in col.lower() or 'altitud' in col.lower()]
+        posibles_punt = [col for col in df.columns if 'punt' in col.lower() or 'calidad' in col.lower() or 'score' in col.lower()]
+        
+        if posibles_temp:
+            df = df.rename(columns={posibles_temp[0]: 'temp_promedio_c'})
+        if posibles_alt:
+            df = df.rename(columns={posibles_alt[0]: 'altitud_msnm'})
+        if posibles_punt:
+            df = df.rename(columns={posibles_punt[0]: 'puntaje_calidad_1_10'})
+    
+    # Usar datos editados si existen
     if st.session_state.modo == "edicion" and st.session_state.df_editado is not None:
         df_actual = st.session_state.df_editado
-        st.info("✏️ Usando datos editados")
+        if len(df_actual) > 10000:
+            st.warning("⚠️ El modo edición con más de 10,000 filas puede ser lento.")
     else:
         df_actual = df
     
@@ -396,79 +406,55 @@ def main_app():
     y_pred_train = model.predict(X_train)
     y_pred_test = model.predict(X_test)
     
-    # Métricas
     mse_train = mean_squared_error(y_train, y_pred_train)
     mse_test = mean_squared_error(y_test, y_pred_test)
     r2_train = r2_score(y_train, y_pred_train)
     r2_test = r2_score(y_test, y_pred_test)
     
     # Tabs
- def app():   
-    st.title("☕ Sistema de Café")
-
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "📊 Datos", 
-        "🤖 Modelo", 
-        "📈 Visualizaciones", 
-        "🔮 Predicciones"
-    ])
-
-    with tab1:
-        st.write("Datos")
-
-    with tab2:
-        st.write("Modelo")
-
-    with tab3:
-        st.write("Visualizaciones")
-
-    with tab4:
-        st.write("Predicciones")
-
-    with tab1:
-        st.subheader("📋 Dataset de Entrenamiento")
-        
-        st.info("📊 El dataset está cargado y siendo utilizado por el modelo, pero no se muestra en la interfaz.")
-
-        st.subheader("📊 Estadísticas Descriptivas")
-        st.dataframe(df_actual.describe().round(2), use_container_width=True)
-
-        st.subheader("📈 Matriz de Correlación")
-        fig_corr = px.imshow(
-            df_actual.corr(), 
-            text_auto=True, 
-            color_continuous_scale='RdBu_r', 
-            aspect="auto"
-        )
-        st.plotly_chart(fig_corr, use_container_width=True)
+    tab1, tab2, tab3, tab4 = st.tabs(["📊 Datos", "🤖 Modelo", "📈 Visualizaciones", "🔮 Predicciones"])
     
-  
+    with tab1:
+    st.subheader("📊 Información del Dataset")
+    
+    st.info("📂 El dataset se está utilizando internamente para entrenar el modelo.")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.metric("📌 Número de registros", len(df_actual))
+    
+    with col2:
+        st.metric("📌 Número de variables", len(df_actual.columns))
+    
+    st.subheader("📊 Estadísticas Descriptivas")
+    st.dataframe(df_actual.describe().round(2), use_container_width=True)
+    
+    st.subheader("📈 Matriz de Correlación")
+    fig_corr = px.imshow(
+        df_actual.corr(), 
+        text_auto=True, 
+        color_continuous_scale='RdBu_r', 
+        aspect="auto"
+    )
     st.plotly_chart(fig_corr, use_container_width=True)
                 
-                # Botón para guardar cambios
                 col_save1, col_save2 = st.columns(2)
                 with col_save1:
                     if st.button("💾 Guardar cambios", use_container_width=True):
                         st.session_state.df_editado = edited_df
-                        st.success("✅ Cambios guardados temporalmente")
+                        st.success("✅ Cambios guardados")
                         st.rerun()
                 with col_save2:
                     if st.button("🔄 Restaurar original", use_container_width=True):
                         st.session_state.df_editado = None
                         st.rerun()
                 
-                # Botón para descargar CSV
                 csv = df_actual.to_csv(index=False)
-                st.download_button(
-                    label="📥 Descargar CSV actual",
-                    data=csv,
-                    file_name="datos_cafe.csv",
-                    mime="text/csv",
-                    use_container_width=True
-                )
+                st.download_button(label="📥 Descargar CSV", data=csv, file_name="datos_cafe.csv", mime="text/csv")
             else:
-                # MODO VISUALIZACIÓN - Solo lectura
-                st.info("👁️ Modo Visualización - Datos de solo lectura")
+                if st.session_state.modo == "edicion" and len(df_actual) > 10000:
+                    st.warning("⚠️ Modo edición desactivado para datasets grandes")
                 st.dataframe(df_actual, use_container_width=True, height=300)
         
         with col2:
@@ -508,19 +494,25 @@ def main_app():
         st.plotly_chart(fig_imp, use_container_width=True)
     
     with tab3:
+        # Obtener muestra para gráficas si el dataset es grande
+        if len(df_actual) > 5000:
+            df_grafica = df_actual.sample(5000, random_state=42)
+            st.info(f"📊 Mostrando muestra de 5000 puntos para gráficas (total: {len(df_actual)} filas)")
+        else:
+            df_grafica = df_actual
+        
         col1, col2 = st.columns(2)
         
         with col1:
             st.subheader("🎯 Relación 3D")
             
-            # Usar la configuración guardada en session_state
             tipo_grafica = st.session_state.tipo_grafica
             color_scheme = st.session_state.color_scheme
             tamaño_puntos = st.session_state.tamaño_puntos
             
             if tipo_grafica == "scatter_3d":
                 fig_3d = px.scatter_3d(
-                    df_actual, 
+                    df_grafica, 
                     x='altitud_msnm', 
                     y='temp_promedio_c', 
                     z='puntaje_calidad_1_10',
@@ -530,20 +522,18 @@ def main_app():
                 )
                 fig_3d.update_traces(marker=dict(size=tamaño_puntos))
             elif tipo_grafica == "surface":
-                # Crear superficie
                 from scipy.interpolate import griddata
-                altitud_vals = np.linspace(df_actual['altitud_msnm'].min(), df_actual['altitud_msnm'].max(), 50)
-                temp_vals = np.linspace(df_actual['temp_promedio_c'].min(), df_actual['temp_promedio_c'].max(), 50)
+                altitud_vals = np.linspace(df_grafica['altitud_msnm'].min(), df_grafica['altitud_msnm'].max(), 50)
+                temp_vals = np.linspace(df_grafica['temp_promedio_c'].min(), df_grafica['temp_promedio_c'].max(), 50)
                 altitud_grid, temp_grid = np.meshgrid(altitud_vals, temp_vals)
-                puntos = df_actual[['altitud_msnm', 'temp_promedio_c']].values
-                valores = df_actual['puntaje_calidad_1_10'].values
+                puntos = df_grafica[['altitud_msnm', 'temp_promedio_c']].values
+                valores = df_grafica['puntaje_calidad_1_10'].values
                 z_grid = griddata(puntos, valores, (altitud_grid, temp_grid), method='cubic')
-                
                 fig_3d = go.Figure(data=[go.Surface(z=z_grid, x=altitud_vals, y=temp_vals, colorscale=color_scheme.lower())])
                 fig_3d.update_layout(title="Superficie de Calidad")
             else:
                 fig_3d = px.line_3d(
-                    df_actual.sort_values('altitud_msnm'),
+                    df_grafica.sort_values('altitud_msnm'),
                     x='altitud_msnm', 
                     y='temp_promedio_c', 
                     z='puntaje_calidad_1_10',
@@ -551,8 +541,6 @@ def main_app():
                 )
             
             st.plotly_chart(fig_3d, use_container_width=True)
-            if st.session_state.modo == "edicion":
-                st.caption("💡 Haz clic derecho en la gráfica para guardar como PNG")
         
         with col2:
             st.subheader("📊 Predicciones vs Reales")
@@ -567,31 +555,16 @@ def main_app():
         st.subheader("📉 Análisis de Residuos")
         residuos = y_test - y_pred_test
         
-        tipo_residuos = st.session_state.tipo_residuos
-        mostrar_linea = st.session_state.mostrar_linea
-        
-        if tipo_residuos == "Puntos":
-            fig_res = px.scatter(
-                x=y_pred_test, 
-                y=residuos,
-                title="Residuos vs Predicciones",
-                labels={'x': 'Valores Predichos', 'y': 'Residuos'},
-                trendline="ols" if mostrar_linea else None
-            )
-        elif tipo_residuos == "Barras":
-            fig_res = px.bar(
-                x=range(len(residuos)), 
-                y=residuos,
-                title="Residuos por observación",
-                labels={'x': 'Observación', 'y': 'Residuo'}
-            )
+        if st.session_state.tipo_residuos == "Puntos":
+            fig_res = px.scatter(x=y_pred_test, y=residuos, title="Residuos vs Predicciones",
+                                labels={'x': 'Valores Predichos', 'y': 'Residuos'},
+                                trendline="ols" if st.session_state.mostrar_linea else None)
+        elif st.session_state.tipo_residuos == "Barras":
+            fig_res = px.bar(x=range(len(residuos)), y=residuos, title="Residuos por observación",
+                            labels={'x': 'Observación', 'y': 'Residuo'})
         else:
-            fig_res = px.line(
-                x=range(len(residuos)), 
-                y=residuos,
-                title="Tendencia de Residuos",
-                labels={'x': 'Observación', 'y': 'Residuo'}
-            )
+            fig_res = px.line(x=range(len(residuos)), y=residuos, title="Tendencia de Residuos",
+                             labels={'x': 'Observación', 'y': 'Residuo'})
         
         fig_res.add_hline(y=0, line_dash="dash", line_color="red")
         st.plotly_chart(fig_res, use_container_width=True)
@@ -601,15 +574,11 @@ def main_app():
         
         col1, col2 = st.columns(2)
         with col1:
-            st.markdown("##### 📍 Ubicación del Cultivo")
-            altitud = st.number_input("Altitud (msnm)", 0.0, 3000.0, 1650.0, step=50.0, 
-                                      help="Altitud sobre el nivel del mar")
+            altitud = st.number_input("Altitud (msnm)", 0.0, 3000.0, 1650.0, step=50.0)
             variedad = st.selectbox("🌱 Variedad de Café", ["Borbón", "Caturra", "Typica", "Catuaí", "Geisha"])
         with col2:
-            st.markdown("##### 🌡️ Condiciones Climáticas")
-            temperatura = st.number_input("Temperatura promedio (°C)", 10.0, 35.0, 20.0, step=0.5,
-                                         help="Temperatura promedio de la zona")
-            humedad = st.slider("💧 Humedad relativa (%)", 60, 90, 75, help="Humedad ambiental")
+            temperatura = st.number_input("Temperatura promedio (°C)", 10.0, 35.0, 20.0, step=0.5)
+            humedad = st.slider("💧 Humedad relativa (%)", 60, 90, 75)
         
         if st.button("🎯 Predecir Calidad", type="primary", use_container_width=True):
             prediccion_raw = model.predict([[altitud, temperatura]])[0]
@@ -634,41 +603,15 @@ def main_app():
             st.subheader("🏷️ Clasificación")
             if prediccion >= 9:
                 st.success("### 🌟 EXCELENCIA - Café de Especialidad Premium")
-                st.markdown("""
-                - **Perfil**: Acidez brillante, aroma floral
-                - **Precio estimado**: $50-80/kg
-                - **Recomendación**: Exportación a mercados especializados
-                """)
             elif prediccion >= 8:
                 st.success("### 👍 MUY BUENO - Café de Especialidad")
-                st.markdown("""
-                - **Perfil**: Balanceado, notas frutales
-                - **Precio estimado**: $30-50/kg
-                - **Recomendación**: Cafeterías de especialidad
-                """)
             elif prediccion >= 7:
                 st.info("### ✅ BUENO - Café Comercial de Alta Calidad")
-                st.markdown("""
-                - **Perfil**: Cuerpo medio, sabor limpio
-                - **Precio estimado**: $15-30/kg
-                - **Recomendación**: Mercado comercial premium
-                """)
             elif prediccion >= 6:
                 st.warning("### ⚠️ REGULAR - Café Comercial Estándar")
-                st.markdown("""
-                - **Perfil**: Sabor simple, acidez baja
-                - **Precio estimado**: $8-15/kg
-                - **Recomendación**: Mercado local
-                """)
             else:
                 st.error("### 📉 BAJO - Café de Calidad Inferior")
-                st.markdown("""
-                - **Perfil**: Defectos en taza, amargor
-                - **Precio estimado**: < $8/kg
-                - **Recomendación**: Mejorar prácticas de cultivo
-                """)
             
-            # Recomendaciones personalizadas
             st.subheader("💡 Recomendaciones")
             if altitud < 1200:
                 st.info("🌱 Considerar variedades resistentes a bajas altitudes")
@@ -677,42 +620,32 @@ def main_app():
             if prediccion < 7:
                 st.info("📊 Revisar prácticas de cosecha y fermentación")
     
-    # Mostrar historial si se solicitó
+    # Mostrar historial
     if st.session_state.get('show_history', False):
         with st.expander("📜 Mi Historial de Predicciones", expanded=True):
             st.info("📊 Aquí se mostrarán tus predicciones guardadas")
-            st.caption("💡 Próximamente: Guardado automático de predicciones")
             if st.button("Cerrar historial"):
                 st.session_state.show_history = False
                 st.rerun()
     
-    # Mostrar recomendaciones si se solicitó
+    # Mostrar recomendaciones
     if st.session_state.get('show_recommendations', False):
         with st.expander("💡 Recomendaciones para Mejorar la Calidad", expanded=True):
             st.markdown("""
             ### 📋 Guía de Buenas Prácticas para Caficultores
             
             #### 🌱 **Cultivo**
-            - ✅ Mantener altitud entre 1200-2000 msnm para mejor calidad
+            - ✅ Mantener altitud entre 1200-2000 msnm
             - ✅ Temperatura óptima: 18-24°C
             - ✅ Implementar sombra regulada (20-40%)
-            - ✅ Realizar análisis de suelo anual
             
             #### 🍒 **Cosecha**
             - ✅ Cosecha selectiva (solo cerezas rojas)
-            - ✅ Frecuencia: cada 8-10 días
             - ✅ Beneficio dentro de 6-8 horas post-cosecha
             
             #### 🏭 **Beneficio**
             - ✅ Fermentación controlada (12-24 horas)
             - ✅ Secado uniforme (humedad 10-12%)
-            - ✅ Almacenamiento en pergamino
-            
-            #### 📈 **Certificaciones**
-            - 🌍 Certificación Orgánica
-            - 🤝 Comercio Justo
-            - 🌱 Rainforest Alliance
-            - ☕ Specialty Coffee Association (SCA)
             """)
             if st.button("Cerrar recomendaciones"):
                 st.session_state.show_recommendations = False
@@ -724,7 +657,6 @@ def main_app():
     <div style='text-align: center; color: gray; padding: 20px;'>
         <p>☕ Desarrollado con ❤️ para caficultores</p>
         <p>📧 Usuario: {st.session_state.get('user_email', '')}</p>
-        <p><small>ℹ️ Herramienta de apoyo diagnóstico. Validar resultados con especialistas en café.</small></p>
     </div>
     """, unsafe_allow_html=True)
 
