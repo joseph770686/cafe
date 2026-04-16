@@ -403,26 +403,26 @@ def main_app():
     r2_test = r2_score(y_test, y_pred_test)
     
     # Tabs
-    tab1, tab2, tab3, tab4 = st.tabs(["📊 Datos", "🤖 Modelo", "📈 Visualizaciones", "🔮 Predicciones"])
-    
-   with tab1:
-    st.subheader("📋 Dataset de Entrenamiento")
-    
-    # 🔒 DATASET OCULTO
-    st.info("📊 El dataset está cargado y siendo utilizado por el modelo, pero no se muestra en la interfaz.")
+        tab1, tab2, tab3, tab4 = st.tabs(["📊 Datos", "🤖 Modelo", "📈 Visualizaciones", "🔮 Predicciones"])
 
-    # 📊 SOLO ESTADÍSTICAS (opcional pero recomendado)
-    st.subheader("📊 Estadísticas Descriptivas")
-    st.dataframe(df_actual.describe().round(2), use_container_width=True)
+    with tab1:
+        st.subheader("📋 Dataset de Entrenamiento")
+        
+        st.info("📊 El dataset está cargado y siendo utilizado por el modelo, pero no se muestra en la interfaz.")
 
-    # 📈 MATRIZ DE CORRELACIÓN (esto sí lo dejamos)
-    st.subheader("📈 Matriz de Correlación")
-    fig_corr = px.imshow(
-        df_actual.corr(), 
-        text_auto=True, 
-        color_continuous_scale='RdBu_r', 
-        aspect="auto"
-    )
+        st.subheader("📊 Estadísticas Descriptivas")
+        st.dataframe(df_actual.describe().round(2), use_container_width=True)
+
+        st.subheader("📈 Matriz de Correlación")
+        fig_corr = px.imshow(
+            df_actual.corr(), 
+            text_auto=True, 
+            color_continuous_scale='RdBu_r', 
+            aspect="auto"
+        )
+        st.plotly_chart(fig_corr, use_container_width=True)
+    
+  
     st.plotly_chart(fig_corr, use_container_width=True)
                 
                 # Botón para guardar cambios
