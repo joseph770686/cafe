@@ -413,37 +413,36 @@ def main_app():
     
     # Tabs
     tab1, tab2, tab3, tab4 = st.tabs(["📊 Datos", "🤖 Modelo", "📈 Visualizaciones", "🔮 Predicciones"])
-  with tab1:
-    st.subheader("📊 Información del Dataset")
     
-    st.info("📂 El dataset se está utilizando internamente para entrenar el modelo.")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.metric("📌 Número de registros", len(df_actual))
-    
-    with col2:
-        st.metric("📌 Número de variables", len(df_actual.columns))
-    
-    st.subheader("📊 Estadísticas Descriptivas")
-    st.dataframe(df_actual.describe().round(2), use_container_width=True)
-    
-    st.subheader("📈 Matriz de Correlación")
-    fig_corr = px.imshow(
-        df_actual.corr(), 
-        text_auto=True, 
-        color_continuous_scale='RdBu_r', 
-        aspect="auto"
-    )
-    st.plotly_chart(fig_corr, use_container_width=True)
-               col1, col2 = st.columns(2)
-
-with col1:
-    st.metric("📌 Número de registros", len(df_actual))
-
-with col2:
-    st.metric("📌 Número de variables", len(df_actual.columns))
+    with tab1:
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            st.subheader("📋 Dataset de Entrenamiento")
+            
+            if st.session_state.modo == "edicion" and len(df_actual) <= 10000:
+                st.info("✏️ Modo Edición activado - Puedes modificar los valores")
+                edited_df = st.data_editor(
+                    df_actual,
+                    use_container_width=True,
+                    height=300,
+                    num_rows="dynamic" if len(df_actual) < 5000 else "fixed",
+                    column_config={
+                        "altitud_msnm": st.column_config.NumberColumn("Altitud (msnm)", min_value=0, max_value=4000),
+                        "temp_promedio_c": st.column_config.NumberColumn("Temperatura (°C)", min_value=0, max_value=40),
+                        "puntaje_calidad_1_10": st.column_config.NumberColumn("Puntaje Calidad", min_value=0, max_value=10, step=0.1)
+                    }
+                )
+                
+                col_save1, col_save2 = st.columns(2)
+                with col_save1:
+                    if st.button("💾 Guardar cambios", use_container_width=True):
+                        st.session_state.df_editado = edited_df
+                        st.success("✅ Cambios guardados")
+                        st.rerun()
+                with col_save2:
+                    if st.button("🔄 Restaurar original", use_container_width=True):
+                        st.session_state.df_editado = None
+                        st.rerun()
                 
                 csv = df_actual.to_csv(index=False)
                 st.download_button(label="📥 Descargar CSV", data=csv, file_name="datos_cafe.csv", mime="text/csv")
